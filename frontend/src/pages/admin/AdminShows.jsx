@@ -121,7 +121,7 @@ export default function AdminShows() {
 
             const res = await api.post("/admin/shows/bulk", payload);
 
-            setOk(`Shows Added for ${res.data} days✅ )`);
+            setOk(`Shows Added for ${res.data} days✅ `);
             await loadShows();
 
             // reset form
