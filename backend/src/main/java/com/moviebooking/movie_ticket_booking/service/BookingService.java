@@ -140,10 +140,6 @@ public class BookingService {
                         throw new RuntimeException("Booking has expired");
                 }
 
-                if (booking.getStatus() == BookingStatus.CONFIRMED) {
-                        return;
-                }
-
                 if (booking.getStatus() != BookingStatus.PENDING) {
                         throw new RuntimeException("Booking is not pending. Current status: " + booking.getStatus());
                 }
