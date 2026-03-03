@@ -30,11 +30,6 @@
     "description": "A description for 'razorpay.webhook-secret'"
   },
   {
-    "name": "mail.from",
-    "type": "java.lang.String",
-    "description": "A description for 'mail.from'"
-  },
-  {
     "name": "app.cors.allowed-origins",
     "type": "java.lang.String",
     "description": "A description for 'app.cors.allowed-origins'"
