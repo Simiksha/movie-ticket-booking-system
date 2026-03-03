@@ -140,6 +140,19 @@ public class BookingService {
                         throw new RuntimeException("Booking has expired");
                 }
 
+                // If already confirmed, just send email if not sent yet
+                if (booking.getStatus() == BookingStatus.CONFIRMED) {
+                        if (!booking.isConfirmationEmailSent()) {
+                                emailService.sendBookingConfirmation(
+                                                booking.getUser().getEmail(),
+                                                "Booking Confirmed 🎬",
+                                                buildBookingEmailContent(booking));
+                                booking.setConfirmationEmailSent(true);
+                                bookingRepository.save(booking);
+                        }
+                        return;
+                }
+
                 if (booking.getStatus() != BookingStatus.PENDING) {
                         throw new RuntimeException("Booking is not pending. Current status: " + booking.getStatus());
                 }
@@ -147,13 +160,12 @@ public class BookingService {
                 booking.setStatus(BookingStatus.CONFIRMED);
                 bookingRepository.save(booking);
 
-                System.out.println("CONFIRM BOOKING METHOD EXECUTED");
-
-                // Optional: avoid sending duplicate emails on retries
                 emailService.sendBookingConfirmation(
                                 booking.getUser().getEmail(),
                                 "Booking Confirmed 🎬",
                                 buildBookingEmailContent(booking));
+                booking.setConfirmationEmailSent(true);
+                bookingRepository.save(booking);
         }
 
         @Scheduled(fixedRate = 60000) // runs every 60 seconds

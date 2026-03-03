@@ -65,4 +65,8 @@ public class Booking {
     @Builder.Default
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BookingSeat> bookingSeats = new ArrayList<>();
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean confirmationEmailSent = false;
 }
