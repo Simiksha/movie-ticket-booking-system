@@ -13,5 +13,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendBookingConfirmation(String toEmail, String subject, String body) {
         brevoEmailService.sendTextEmail(toEmail, subject, body);
+        System.out.println("BOOKING EMAIL METHOD CALLED");
     }
+    
 }

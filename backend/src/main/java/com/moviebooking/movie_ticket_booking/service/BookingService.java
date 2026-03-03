@@ -151,6 +151,8 @@ public class BookingService {
                 booking.setStatus(BookingStatus.CONFIRMED);
                 bookingRepository.save(booking);
 
+                System.out.println("CONFIRM BOOKING METHOD EXECUTED");
+
                 // Optional: avoid sending duplicate emails on retries
                 emailService.sendBookingConfirmation(
                                 booking.getUser().getEmail(),
