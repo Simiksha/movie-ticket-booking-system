@@ -14,7 +14,7 @@ public class TestEmailController {
     
     private final EmailService emailService;
 
-    @GetMapping("/test-email")
+    @GetMapping("movies/test-email")
     public String testEmail(@RequestParam String to) {
         emailService.sendBookingConfirmation(to, "Brevo Test", "Hello from Render + Brevo!");
         return "sent";
