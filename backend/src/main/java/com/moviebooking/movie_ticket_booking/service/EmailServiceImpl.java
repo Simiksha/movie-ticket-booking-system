@@ -18,6 +18,9 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendBookingConfirmation(String toEmail, String subject, String body) {
+
+        System.out.println("EMAIL SERVICE CALLED → Sending to: " + toEmail);
+        
         SimpleMailMessage message = new SimpleMailMessage();
         if (from != null && !from.isBlank()) message.setFrom(from);
         message.setTo(toEmail);
