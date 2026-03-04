@@ -71,12 +71,17 @@ export default function MyBookings() {
 
   async function cancelBooking(bookingId) {
     if (cancelling[bookingId]) return;
-    if (!window.confirm("Cancel this booking?")) return;
+
+    setCancelling((p) => ({ ...p, [bookingId]: true }));
+
+    const ok = window.confirm("Cancel this booking?");
+    if (!ok) {
+      setCancelling((p) => ({ ...p, [bookingId]: false }));
+      return;
+    }
 
     try {
       setErr("");
-      setCancelling((p) => ({ ...p, [bookingId]: true }));
-
       await api.delete(`/bookings/${bookingId}`);
       setBookings(await load());
     } catch (e) {
