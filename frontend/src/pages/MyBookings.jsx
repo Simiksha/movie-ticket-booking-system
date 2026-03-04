@@ -29,14 +29,21 @@ function fmt(iso) {
   return String(iso).replace("T", " ");
 }
 
+function minutesUntil(iso) {
+  if (!iso) return Infinity;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return Infinity;
+  return Math.floor((t - Date.now()) / 60000);
+}
+
 export default function MyBookings() {
   const nav = useNavigate();
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  // bookingId -> boolean (true while cancelling)
   const [cancelling, setCancelling] = useState({});
-  const [confirmCancelId, setConfirmCancelId] = useState(null);
 
   async function load() {
     const res = await api.get("/bookings/my-bookings");
@@ -70,19 +77,25 @@ export default function MyBookings() {
     return { total, confirmed };
   }, [bookings]);
 
-  async function cancelBooking(bookingId) {
+  async function cancelBooking(bookingId, showTime) {
+    // prevent double click
     if (cancelling[bookingId]) return;
+
+    // frontend guard: don't even try if within 30 mins
+    const minsLeft = minutesUntil(showTime);
+    if (minsLeft <= 30) return;
 
     try {
       setErr("");
+      // disable/cursor lock immediately
       setCancelling((p) => ({ ...p, [bookingId]: true }));
 
       await api.delete(`/bookings/${bookingId}`);
-      setConfirmCancelId(null);
       setBookings(await load());
     } catch (e) {
       setErr(e?.response?.data?.message || "Failed to cancel booking");
     } finally {
+      // re-enable button
       setCancelling((p) => ({ ...p, [bookingId]: false }));
     }
   }
@@ -124,10 +137,12 @@ export default function MyBookings() {
           const paymentStatus = b.paymentStatus;
 
           const canPay = upper(bookingStatus) === "PENDING";
-          const canCancel = upper(bookingStatus) === "CONFIRMED";
+
+          const minsLeft = minutesUntil(b.showTime);
+          const cancelLocked = minsLeft <= 30;
+          const showCancelUI = upper(bookingStatus) === "CONFIRMED";
 
           const isCancelling = !!cancelling[bookingId];
-          const isConfirmingThis = confirmCancelId === bookingId;
 
           return (
             <div key={bookingId} className="card">
@@ -165,43 +180,28 @@ export default function MyBookings() {
                       </Link>
                     )}
 
-                    {canCancel &&
-                      (isConfirmingThis ? (
-                        <>
-                          <button
-                            className="btn btnDanger"
-                            onClick={() => cancelBooking(bookingId)}
-                            disabled={isCancelling}
-                            style={{
-                              cursor: isCancelling ? "not-allowed" : "pointer",
-                              opacity: isCancelling ? 0.6 : 1,
-                            }}
-                          >
-                            {isCancelling ? "Cancelling..." : "Confirm Cancel"}
-                          </button>
-
-                          <button
-                            className="btn"
-                            onClick={() => setConfirmCancelId(null)}
-                            disabled={isCancelling}
-                          >
-                            Keep
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          className="btn btnDanger"
-                          onClick={() => setConfirmCancelId(bookingId)}
-                          disabled={isCancelling}
-                          style={{
-                            cursor: isCancelling ? "not-allowed" : "pointer",
-                            opacity: isCancelling ? 0.6 : 1,
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      ))}
+                    {/* Cancel button: shown for CONFIRMED, disabled if cancelling or within 30 mins */}
+                    {showCancelUI && (
+                      <button
+                        className="btn btnDanger"
+                        onClick={() => cancelBooking(bookingId, b.showTime)}
+                        disabled={isCancelling || cancelLocked}
+                        style={{
+                          cursor: isCancelling || cancelLocked ? "not-allowed" : "pointer",
+                          opacity: isCancelling || cancelLocked ? 0.6 : 1,
+                        }}
+                        title={cancelLocked ? "Cancellation not allowed within 30 minutes of showtime" : ""}
+                      >
+                        {isCancelling ? "Cancelling..." : "Cancel"}
+                      </button>
+                    )}
                   </div>
+
+                  {showCancelUI && cancelLocked && (
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6, textAlign: "right" }}>
+                      Cancellation not allowed within 30 minutes of showtime
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
