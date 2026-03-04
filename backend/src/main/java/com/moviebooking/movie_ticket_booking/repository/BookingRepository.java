@@ -31,10 +31,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Transactional
-    @Query("""
-        update Booking b
-        set b.confirmationEmailSent = true
-        where b.id = :id and b.confirmationEmailSent = false
-    """)
+    @Query(
+        value = "UPDATE bookings SET confirmation_email_sent = true WHERE id = :id AND confirmation_email_sent = false",
+        nativeQuery = true
+    )
     int markConfirmationEmailSent(@Param("id") Long id);
 }

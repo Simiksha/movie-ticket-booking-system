@@ -29,6 +29,9 @@ import com.moviebooking.movie_ticket_booking.theater.Theater;
 
 import lombok.RequiredArgsConstructor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 @RequiredArgsConstructor
 public class BookingService {
@@ -39,6 +42,7 @@ public class BookingService {
         private final PaymentRepository paymentRepository;
         private final EmailService emailService;
         private final ShowRepository showRepository;
+        private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
         @Transactional
         public Long createBooking(String userEmail, BookingRequest request) {
@@ -142,7 +146,7 @@ public class BookingService {
                         throw new RuntimeException("Booking has expired");
                 }
 
-                // If already confirmed, just try to send email once (atomic flip false->true)
+                // If already confirmed, just try to send email once 
                 if (booking.getStatus() == BookingStatus.CONFIRMED) {
                         int updated = bookingRepository.markConfirmationEmailSent(bookingId);
                         if (updated == 1) {
@@ -163,8 +167,11 @@ public class BookingService {
                 booking.setStatus(BookingStatus.CONFIRMED);
                 bookingRepository.save(booking);
 
-                // Send email exactly once (atomic flip false->true)
+                // Send email exactly once 
                 int updated = bookingRepository.markConfirmationEmailSent(bookingId);
+
+                log.info("markConfirmationEmailSent updatedRows={} for bookingId={}", updated, bookingId);
+
                 if (updated == 1) {
                         emailService.sendBookingConfirmation(
                                         booking.getUser().getEmail(),
