@@ -28,8 +28,6 @@ public class MovieController {
 
     private final MovieService movieService;
 
-    // PUBLIC APIs
-
     @GetMapping("/movies")
     public Page<MovieResponse> getMovies(
             @RequestParam(required = false) String genre,
@@ -37,14 +35,21 @@ public class MovieController {
             @RequestParam(required = false) String city,
             Pageable pageable) {
 
-        if (date != null || (city != null && !city.isBlank())) {
-            return movieService.getAvailableMovies(genre, date, city, pageable);
+        boolean hasCity = city != null && !city.isBlank();
+        boolean hasGenre = genre != null && !genre.isBlank();
+
+        // If filtering by availability (date or city)
+        if (date != null || hasCity) {
+            LocalDate safeDate = (date != null) ? date : LocalDate.now();
+            return movieService.getAvailableMovies(genre, safeDate, city, pageable);
         }
 
-        if (genre != null && !genre.isBlank()) {
+        // Only genre filter
+        if (hasGenre) {
             return movieService.getMoviesByGenre(genre, pageable);
         }
 
+        // all movies
         return movieService.getAllMovies(pageable);
     }
 
