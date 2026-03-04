@@ -153,8 +153,8 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public Page<MovieResponse> getAvailableMovies(String genre, LocalDate date, String city, Pageable pageable) {
 
-        String safeCity = (city == null || city.isBlank()) ? null : city.trim();
-        String safeGenre = (genre == null || genre.isBlank()) ? null : genre.trim().toUpperCase();
+        String safeCity = (city == null || city.isBlank()) ? null : city.trim().toLowerCase();
+        String safeGenre = (genre == null || genre.isBlank()) ? null : genre.trim().toLowerCase();
 
         LocalDateTime start = null;
         LocalDateTime end = null;

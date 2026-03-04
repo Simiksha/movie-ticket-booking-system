@@ -26,9 +26,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
                 join sc.theater t
                 left join m.genres g
                 where m.active = true
-                  and (:city is null or lower(t.city) = lower(:city))
+                  and (:city is null or lower(t.city) = :city)
                   and (:start is null or s.showTime between :start and :end)
-                  and (:genre is null or lower(g.name) = lower(:genre))
+                  and (:genre is null or lower(g.name) = :genre)
             """, countQuery = """
                 select count(distinct m.id)
                 from Movie m
@@ -37,9 +37,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
                 join sc.theater t
                 left join m.genres g
                 where m.active = true
-                  and (:city is null or lower(t.city) = lower(:city))
+                  and (:city is null or lower(t.city) = :city)
                   and (:start is null or s.showTime between :start and :end)
-                  and (:genre is null or lower(g.name) = lower(:genre))
+                  and (:genre is null or lower(g.name) = :genre)
             """)
     Page<Movie> findAvailableMovies(
             @Param("genre") String genre,
