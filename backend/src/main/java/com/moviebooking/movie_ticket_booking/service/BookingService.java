@@ -133,11 +133,11 @@ public class BookingService {
 
         @Transactional
         public void confirmBooking(Long bookingId) {
+                log.info("CONFIRM_BOOKING called bookingId={}", bookingId);
 
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-                // Expiry check
                 if (booking.getExpiresAt().isBefore(LocalDateTime.now())) {
                         if (booking.getStatus() == BookingStatus.PENDING) {
                                 booking.setStatus(BookingStatus.EXPIRED);
@@ -146,31 +146,17 @@ public class BookingService {
                         throw new RuntimeException("Booking has expired");
                 }
 
-                // If already confirmed, just try to send email once 
-                if (booking.getStatus() == BookingStatus.CONFIRMED) {
-                        int updated = bookingRepository.markConfirmationEmailSent(bookingId);
-                        if (updated == 1) {
-                                emailService.sendBookingConfirmation(
-                                                booking.getUser().getEmail(),
-                                                "Booking Confirmed 🎬",
-                                                buildBookingEmailContent(booking));
-                        }
-                        return;
-                }
-
-                // Only pending bookings can be confirmed
-                if (booking.getStatus() != BookingStatus.PENDING) {
+                // Only pending or confirmed are valid states here
+                if (booking.getStatus() == BookingStatus.PENDING) {
+                        booking.setStatus(BookingStatus.CONFIRMED);
+                        bookingRepository.save(booking);
+                } else if (booking.getStatus() != BookingStatus.CONFIRMED) {
                         throw new RuntimeException("Booking is not pending. Current status: " + booking.getStatus());
                 }
 
-                // Confirm booking
-                booking.setStatus(BookingStatus.CONFIRMED);
-                bookingRepository.save(booking);
-
-                // Send email exactly once 
+                // Try to flip false->true once; only one request will succeed
                 int updated = bookingRepository.markConfirmationEmailSent(bookingId);
-
-                log.info("markConfirmationEmailSent updatedRows={} for bookingId={}", updated, bookingId);
+                log.info("markConfirmationEmailSent updatedRows={} bookingId={}", updated, bookingId);
 
                 if (updated == 1) {
                         emailService.sendBookingConfirmation(
