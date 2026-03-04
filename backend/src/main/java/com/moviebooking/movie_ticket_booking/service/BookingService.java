@@ -29,9 +29,6 @@ import com.moviebooking.movie_ticket_booking.theater.Theater;
 
 import lombok.RequiredArgsConstructor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @Service
 @RequiredArgsConstructor
 public class BookingService {
@@ -42,7 +39,6 @@ public class BookingService {
         private final PaymentRepository paymentRepository;
         private final EmailService emailService;
         private final ShowRepository showRepository;
-        private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
         @Transactional
         public Long createBooking(String userEmail, BookingRequest request) {
@@ -133,32 +129,30 @@ public class BookingService {
 
         @Transactional
         public void confirmBooking(Long bookingId) {
-                log.warn("CONFIRM_BOOKING called bookingId={}", bookingId);
-
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-                if (booking.getExpiresAt().isBefore(LocalDateTime.now())) {
+                // Expiry check
+                if (booking.getExpiresAt() != null && booking.getExpiresAt().isBefore(LocalDateTime.now())) {
                         if (booking.getStatus() == BookingStatus.PENDING) {
                                 booking.setStatus(BookingStatus.EXPIRED);
-                                bookingRepository.save(booking);
+                                bookingRepository.saveAndFlush(booking);
                         }
                         throw new RuntimeException("Booking has expired");
                 }
 
-                // Only pending or confirmed are valid states here
+                // Status transition
                 if (booking.getStatus() == BookingStatus.PENDING) {
                         booking.setStatus(BookingStatus.CONFIRMED);
-                        bookingRepository.save(booking);
                 } else if (booking.getStatus() != BookingStatus.CONFIRMED) {
                         throw new RuntimeException("Booking is not pending. Current status: " + booking.getStatus());
                 }
 
-                // Try to flip false->true once; only one request will succeed
-                int updated = bookingRepository.markConfirmationEmailSent(bookingId);
-                log.warn("markConfirmationEmailSent updatedRows={} bookingId={}", updated, bookingId);
+                // Send confirmation email exactly once
+                if (!booking.isConfirmationEmailSent()) {
+                        booking.setConfirmationEmailSent(true);
+                        bookingRepository.saveAndFlush(booking); // persist flag + status
 
-                if (updated == 1) {
                         emailService.sendBookingConfirmation(
                                         booking.getUser().getEmail(),
                                         "Booking Confirmed 🎬",
