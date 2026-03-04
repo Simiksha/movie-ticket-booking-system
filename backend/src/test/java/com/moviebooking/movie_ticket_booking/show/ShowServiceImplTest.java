@@ -165,7 +165,7 @@ public class ShowServiceImplTest {
         Page<Show> showPage = new PageImpl<>(List.of(mockShow));
         when(showRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(showPage);
 
-        Page<ShowResponse> result = showService.getShows(LocalDate.now(), 1L, 1L, pageable);
+        Page<ShowResponse> result = showService.getShows(LocalDate.now(), 1L, 1L, "chennai", pageable);
 
         assertThat(result.getContent()).hasSize(1);
         verify(showRepository).findAll(any(Specification.class), eq(pageable));

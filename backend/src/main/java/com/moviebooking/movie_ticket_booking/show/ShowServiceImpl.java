@@ -120,6 +120,7 @@ public class ShowServiceImpl implements ShowService {
                                                 show.getMovie().getTitle(),
                                                 show.getScreen().getName(),
                                                 show.getScreen().getTheater().getName(),
+                                                show.getScreen().getTheater().getCity(), 
                                                 show.getShowTime(),
                                                 show.getPrice()))
                                 .toList();
@@ -132,9 +133,10 @@ public class ShowServiceImpl implements ShowService {
                         LocalDate date,
                         Long theaterId,
                         Long movieId,
+                        String city,
                         Pageable pageable) {
 
-                Specification<Show> spec = ShowSpecification.filterShows(date, theaterId, movieId);
+                Specification<Show> spec = ShowSpecification.filterShows(date, theaterId, movieId, city);
 
                 return showRepository.findAll(spec, pageable)
                                 .map(show -> new ShowResponse(
@@ -142,6 +144,7 @@ public class ShowServiceImpl implements ShowService {
                                                 show.getMovie().getTitle(),
                                                 show.getScreen().getName(),
                                                 show.getScreen().getTheater().getName(),
+                                                show.getScreen().getTheater().getCity(), 
                                                 show.getShowTime(),
                                                 show.getPrice()));
         }
@@ -207,7 +210,7 @@ public class ShowServiceImpl implements ShowService {
 
                                 LocalDateTime showTime = d.atTime(t);
 
-                                // skip duplicates 
+                                // skip duplicates
                                 if (showRepository.existsByScreenIdAndShowTime(screen.getId(), showTime)) {
                                         continue;
                                 }
@@ -216,7 +219,7 @@ public class ShowServiceImpl implements ShowService {
                                                 .movie(movie)
                                                 .screen(screen)
                                                 .showTime(showTime)
-                                                .price(req.price()) 
+                                                .price(req.price())
                                                 .build();
 
                                 Show savedShow = showRepository.save(show);

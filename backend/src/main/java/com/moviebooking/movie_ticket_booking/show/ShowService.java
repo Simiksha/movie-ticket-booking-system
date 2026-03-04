@@ -21,7 +21,7 @@ public interface ShowService {
 
     List<ShowResponse> getAllShows();
 
-    Page<ShowResponse> getShows(LocalDate date, Long theaterId, Long movieId,Pageable pageable); 
+    Page<ShowResponse> getShows(LocalDate date, Long theaterId, Long movieId, String city, Pageable pageable);
 
     List<ShowSeatResponse> getSeatsForShow(Long showId);
 

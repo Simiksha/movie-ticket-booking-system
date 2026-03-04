@@ -12,7 +12,8 @@ public class ShowSpecification {
         public static Specification<Show> filterShows(
                         LocalDate date,
                         Long theaterId,
-                        Long movieId) {
+                        Long movieId,
+                        String city) {
 
                 return (root, query, cb) -> {
 
@@ -28,8 +29,8 @@ public class ShowSpecification {
                                 predicates = cb.and(predicates,
                                         cb.equal(
                                                 root.get("screen")
-                                                                .get("theater")
-                                                                .get("id"),
+                                                    .get("theater")
+                                                    .get("id"),
                                                 theaterId));
                         }
 
@@ -37,8 +38,18 @@ public class ShowSpecification {
                                 predicates = cb.and(predicates,
                                         cb.equal(
                                                 root.get("movie")
-                                                                .get("id"),
+                                                .get("id"),
                                                 movieId));
+                        }
+
+                        if (city != null && !city.trim().isEmpty()) {
+                                predicates = cb.and(predicates,
+                                        cb.equal(
+                                                cb.lower(
+                                                        root.get("screen")
+                                                                .get("theater")
+                                                                .get("city")),
+                                                city.trim().toLowerCase()));
                         }
 
                         return predicates;

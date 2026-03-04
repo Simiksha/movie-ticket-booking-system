@@ -1,7 +1,10 @@
 package com.moviebooking.movie_ticket_booking.controller;
 
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,9 +33,15 @@ public class MovieController {
     @GetMapping("/movies")
     public Page<MovieResponse> getMovies(
             @RequestParam(required = false) String genre,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String city,
             Pageable pageable) {
 
-        if (genre != null) {
+        if (date != null || (city != null && !city.isBlank())) {
+            return movieService.getAvailableMovies(genre, date, city, pageable);
+        }
+
+        if (genre != null && !genre.isBlank()) {
             return movieService.getMoviesByGenre(genre, pageable);
         }
 

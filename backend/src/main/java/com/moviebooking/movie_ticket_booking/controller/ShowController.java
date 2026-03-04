@@ -38,8 +38,10 @@ public class ShowController {
 
             @RequestParam(required = false) Long movieId,
 
+            @RequestParam(required = false) String city,
+
             Pageable pageable) {
 
-        return showService.getShows(date, theaterId, movieId, pageable);
+        return showService.getShows(date, theaterId, movieId, city, pageable);
     }
 }

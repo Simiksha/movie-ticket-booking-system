@@ -54,7 +54,7 @@ public class ShowSpecificationTest {
 
     @Test
     void shouldFilterByDate() {
-        Specification<Show> spec = ShowSpecification.filterShows(LocalDate.now(), null, null);
+        Specification<Show> spec = ShowSpecification.filterShows(LocalDate.now(), null, null, null);
         List<Show> results = showRepository.findAll(spec);
         
         assertThat(results).isNotNull();
@@ -63,7 +63,7 @@ public class ShowSpecificationTest {
     @Test
     void shouldFilterByTheaterId() {
         Long theaterId = theater1.getId();
-        Specification<Show> spec = ShowSpecification.filterShows(null, theaterId, null);
+        Specification<Show> spec = ShowSpecification.filterShows(null, theaterId, null, null);
 
         List<Show> results = showRepository.findAll(spec);
 
@@ -74,7 +74,7 @@ public class ShowSpecificationTest {
     @Test
     void shouldFilterByMovieId() {
         Long movieId = movie1.getId();
-        Specification<Show> spec = ShowSpecification.filterShows(null, null, movieId);
+        Specification<Show> spec = ShowSpecification.filterShows(null, null, movieId, null);
 
         List<Show> results = showRepository.findAll(spec);
 
@@ -84,7 +84,7 @@ public class ShowSpecificationTest {
 
     @Test
     void shouldFilterByMultipleCriteria() {
-        Specification<Show> spec = ShowSpecification.filterShows(null, 999L, movie1.getId());
+        Specification<Show> spec = ShowSpecification.filterShows(null, 999L, movie1.getId(), null);
 
         List<Show> results = showRepository.findAll(spec);
 

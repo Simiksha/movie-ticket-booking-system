@@ -11,6 +11,7 @@ public record ShowResponse(
         String movieTitle,
         String screenName,
         String theaterName,
+        String city,
         LocalDateTime showTime,
         BigDecimal price) {
 

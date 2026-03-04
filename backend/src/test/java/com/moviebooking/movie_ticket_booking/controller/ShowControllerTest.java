@@ -91,7 +91,7 @@ public class ShowControllerTest {
         Page<ShowResponse> page =
                 new PageImpl<>(List.of(r1), pageable, 1);
 
-        when(showService.getShows(isNull(), isNull(), isNull(), any()))
+        when(showService.getShows(isNull(), isNull(), isNull(), isNull(), any()))
                 .thenReturn(page);
 
         mockMvc.perform(get("/shows")
@@ -102,7 +102,7 @@ public class ShowControllerTest {
                 .andExpect(jsonPath("$.content[0].id").value(1))
                 .andExpect(jsonPath("$.totalElements").value(1));
 
-        verify(showService).getShows(isNull(), isNull(), isNull(), any());
+        verify(showService).getShows(isNull(), isNull(), isNull(), isNull(), any());
     }
 
     // GET /shows with filters
@@ -114,7 +114,7 @@ public class ShowControllerTest {
         Page<ShowResponse> empty =
                 new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
 
-        when(showService.getShows(eq(date), eq(5L), eq(7L), any()))
+        when(showService.getShows(eq(date), eq(5L), eq(7L), eq("chennai"), any()))
                 .thenReturn(empty);
 
         mockMvc.perform(get("/shows")
@@ -126,7 +126,7 @@ public class ShowControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(0));
 
-        verify(showService).getShows(eq(date), eq(5L), eq(7L), any());
+        verify(showService).getShows(eq(date), eq(5L), eq(7L), eq("chennai"), any());
     }
 
     // Invalid date format

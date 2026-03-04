@@ -2,6 +2,8 @@ package com.moviebooking.movie_ticket_booking.service;
 
 
 
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -20,4 +22,6 @@ public interface MovieService {
     Page<MovieResponse> getAllMovies(Pageable pageable);
 
     Page<MovieResponse> getMoviesByGenre(String genre, Pageable pageable);
+
+    Page<MovieResponse> getAvailableMovies(String genre, LocalDate date, String city, Pageable pageable);
 }

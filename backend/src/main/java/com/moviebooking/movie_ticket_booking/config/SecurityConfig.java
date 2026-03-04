@@ -29,6 +29,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/movies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/shows/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/theaters/**").permitAll()
                         .requestMatchers("/payments/webhook").permitAll()
                         .requestMatchers(HttpMethod.POST, "/shows/**").hasRole("ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")

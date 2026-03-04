@@ -1,5 +1,8 @@
 package com.moviebooking.movie_ticket_booking.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 public class MovieServiceImpl implements MovieService {
     private final MovieRepository movieRepository;
     private final GenreRepository genreRepository;
-
 
     // ================= CREATE MOVIES =================
 
@@ -87,7 +89,7 @@ public class MovieServiceImpl implements MovieService {
         if (request.getActive() != null)
             movie.setActive(request.getActive());
 
-        Movie saved = movieRepository.saveAndFlush(movie); 
+        Movie saved = movieRepository.saveAndFlush(movie);
         return mapToResponse(saved);
     }
 
@@ -120,7 +122,6 @@ public class MovieServiceImpl implements MovieService {
                 .map(this::mapToResponse);
     }
 
-
     private Genre getOrCreateGenre(String name) {
 
         String normalized = name.trim().toUpperCase();
@@ -147,5 +148,22 @@ public class MovieServiceImpl implements MovieService {
                 .releaseDate(movie.getReleaseDate())
                 .posterUrl(movie.getPosterUrl())
                 .build();
+    }
+
+    @Override
+    public Page<MovieResponse> getAvailableMovies(String genre, LocalDate date, String city, Pageable pageable) {
+
+        String safeCity = (city == null || city.isBlank()) ? null : city.trim();
+        String safeGenre = (genre == null || genre.isBlank()) ? null : genre.trim().toUpperCase();
+
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+        if (date != null) {
+            start = date.atStartOfDay();
+            end = date.atTime(LocalTime.MAX);
+        }
+
+        return movieRepository.findAvailableMovies(safeGenre, safeCity, start, end, pageable)
+                .map(this::mapToResponse);
     }
 }

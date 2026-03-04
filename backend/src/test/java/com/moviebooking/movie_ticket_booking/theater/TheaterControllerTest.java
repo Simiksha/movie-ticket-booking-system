@@ -28,7 +28,7 @@ import com.moviebooking.movie_ticket_booking.security.JwtUtil;
 import com.moviebooking.movie_ticket_booking.theater.dto.CreateScreenRequest;
 import com.moviebooking.movie_ticket_booking.theater.dto.CreateTheaterRequest;
 
-@WebMvcTest(TheaterController.class)
+@WebMvcTest(AdminTheaterController.class)
 @Import({SecurityConfig.class, SecurityBeansConfig.class})
 public class TheaterControllerTest {
 

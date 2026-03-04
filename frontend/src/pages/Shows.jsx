@@ -39,8 +39,15 @@ export default function Shows() {
   const [shows, setShows] = useState([]);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
+
   const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState(() => searchParams.get("date") || new Date().toISOString().slice(0, 10));
+
+  const [date, setDate] = useState(
+    () => searchParams.get("date") || new Date().toISOString().slice(0, 10)
+  );
+
+  const city = searchParams.get("city") || "";
+
 
   useEffect(() => {
     if (!movieId) return;
@@ -54,13 +61,21 @@ export default function Shows() {
 
         if (safeDate !== date) {
           setDate(safeDate);
-          setSearchParams({ date: safeDate });
+          const next = {};
+          next.date = safeDate;
+          if (city) next.city = city;
+          setSearchParams(next);
           return;
         }
 
-        const res = await api.get(
-          `/shows?movieId=${movieId}&date=${safeDate}&page=0&size=50`
-        );
+        const params = new URLSearchParams();
+        params.set("movieId", movieId);
+        params.set("date", safeDate);
+        params.set("page", "0");
+        params.set("size", "50");
+        if (city) params.set("city", city);
+
+        const res = await api.get(`/shows?${params.toString()}`);
 
         const data = Array.isArray(res.data)
           ? res.data
@@ -75,7 +90,7 @@ export default function Shows() {
         setLoading(false);
       }
     })();
-  }, [movieId, date, today, setSearchParams]);
+  }, [movieId, date, city, today, setSearchParams]);
 
   const movieTitle = shows?.[0]?.movieTitle || "Shows";
   const theaters = useMemo(() => groupByTheater(shows), [shows]);
@@ -84,13 +99,16 @@ export default function Shows() {
 
   return (
     <div className="container">
-      <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-end" }}>
+      <div
+        className="row"
+        style={{ justifyContent: "space-between", alignItems: "flex-end" }}
+      >
         <div>
           <div className="h1">{movieTitle}</div>
           <div className="sub">Select a theater and showtime for {date}.</div>
         </div>
 
-        <div className="row" style={{ gap: 10 }}>
+        <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
           <input
             className="input"
             type="date"
@@ -100,7 +118,11 @@ export default function Shows() {
               const v = e.target.value;
               const safe = v < today ? today : v;
               setDate(safe);
-              setSearchParams({ date: safe });
+
+              const next = {};
+              next.date = safe;
+              if (city) next.city = city;
+              setSearchParams(next);
             }}
             style={{ width: 180 }}
           />
@@ -115,71 +137,101 @@ export default function Shows() {
 
       {!err && shows.length === 0 && (
         <div className="card">
-          <b>No shows found for {date}.</b>
+          <b>No shows found for {date}{city ? ` in ${city}` : ""}.</b>
           <div style={{ color: "var(--muted)", marginTop: 6 }}>
-            Try another date.
+            Try another date{city ? " or city" : ""}.
           </div>
         </div>
       )}
 
       <div className="grid" style={{ marginTop: 14 }}>
-        {theaters.map(([theaterName, list]) => (
-          <div key={theaterName} className="card">
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <div>
-                <div style={{ fontWeight: 850, fontSize: 16 }}>{theaterName}</div>
-                <div style={{ color: "var(--muted)", fontSize: 13, marginTop: 4 }}>
-                  {list.length} show{list.length === 1 ? "" : "s"} available
-                </div>
-              </div>
+        {theaters.map(([theaterName, list]) => {
+          const theaterCity = list?.[0]?.city;
 
-              <span className="pill">From ₹{Math.min(...list.map((s) => Number(s.price || 0)))}</span>
-            </div>
-
-            <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-              {list.map((s) => {
-                const started = new Date(s.showTime).getTime() <= Date.now();
-
-                return (
+          return (
+            <div key={theaterName} className="card">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 850, fontSize: 16 }}>
+                    {theaterName}
+                  </div>
                   <div
-                    key={s.id}
                     style={{
-                      border: "1px solid var(--line)",
-                      borderRadius: 14,
-                      padding: 12,
+                      color: "var(--muted)",
+                      fontSize: 13,
+                      marginTop: 4,
                       display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 12,
+                      gap: 8,
                       flexWrap: "wrap",
+                      alignItems: "center",
                     }}
                   >
-                    <div style={{ display: "grid", gap: 4 }}>
-                      <div style={{ fontWeight: 800 }}>{formatDateTime(s.showTime)}</div>
-                      <div style={{ color: "var(--muted)", fontSize: 13 }}>
-                        {s.screenName} • ₹{s.price}
-                      </div>
-                    </div>
-
-                    {started ? (
-                      <button
-                        className="btn"
-                        disabled
-                        style={{ opacity: 0.6, cursor: "not-allowed" }}
-                      >
-                        Booking Closed
-                      </button>
-                    ) : (
-                      <Link className="btn btnPrimary" to={`/shows/${s.id}/seats`}>
-                        Select Seats
-                      </Link>
-                    )}
+                    {theaterCity ? <span className="pill">{theaterCity}</span> : null}
+                    <span>
+                      {list.length} show{list.length === 1 ? "" : "s"} available
+                    </span>
                   </div>
-                );
-              })}
+                </div>
+
+                <span className="pill">
+                  From ₹{Math.min(...list.map((s) => Number(s.price || 0)))}
+                </span>
+              </div>
+
+              <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                {list.map((s) => {
+                  const started = new Date(s.showTime).getTime() <= Date.now();
+
+                  return (
+                    <div
+                      key={s.id}
+                      style={{
+                        border: "1px solid var(--line)",
+                        borderRadius: 14,
+                        padding: 12,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ display: "grid", gap: 4 }}>
+                        <div style={{ fontWeight: 800 }}>
+                          {formatDateTime(s.showTime)}
+                        </div>
+                        <div style={{ color: "var(--muted)", fontSize: 13 }}>
+                          {s.screenName} • ₹{s.price}
+                        </div>
+                      </div>
+
+                      {started ? (
+                        <button
+                          className="btn"
+                          disabled
+                          style={{ opacity: 0.6, cursor: "not-allowed" }}
+                        >
+                          Booking Closed
+                        </button>
+                      ) : (
+                        <Link className="btn btnPrimary" to={`/shows/${s.id}/seats`}>
+                          Select Seats
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
