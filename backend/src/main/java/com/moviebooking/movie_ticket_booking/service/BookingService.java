@@ -143,12 +143,12 @@ public class BookingService {
                 // If already confirmed, just send email if not sent yet
                 if (booking.getStatus() == BookingStatus.CONFIRMED) {
                         if (!booking.isConfirmationEmailSent()) {
+                                booking.setConfirmationEmailSent(true);
+                                bookingRepository.save(booking);
                                 emailService.sendBookingConfirmation(
                                                 booking.getUser().getEmail(),
                                                 "Booking Confirmed 🎬",
                                                 buildBookingEmailContent(booking));
-                                booking.setConfirmationEmailSent(true);
-                                bookingRepository.save(booking);
                         }
                         return;
                 }
@@ -158,14 +158,13 @@ public class BookingService {
                 }
 
                 booking.setStatus(BookingStatus.CONFIRMED);
+                booking.setConfirmationEmailSent(true);
                 bookingRepository.save(booking);
 
                 emailService.sendBookingConfirmation(
                                 booking.getUser().getEmail(),
                                 "Booking Confirmed 🎬",
                                 buildBookingEmailContent(booking));
-                booking.setConfirmationEmailSent(true);
-                bookingRepository.save(booking);
         }
 
         @Scheduled(fixedRate = 60000) // runs every 60 seconds
