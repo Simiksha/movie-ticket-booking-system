@@ -29,8 +29,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findExpiredPendingWithSeats(@Param("status") BookingStatus status,
             @Param("now") LocalDateTime now);
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Transactional
-    @Query("update Booking b set b.confirmationEmailSent = true where b.id = :id and b.confirmationEmailSent = false")
+    @Query("""
+        update Booking b
+        set b.confirmationEmailSent = true
+        where b.id = :id and b.confirmationEmailSent = false
+    """)
     int markConfirmationEmailSent(@Param("id") Long id);
 }
