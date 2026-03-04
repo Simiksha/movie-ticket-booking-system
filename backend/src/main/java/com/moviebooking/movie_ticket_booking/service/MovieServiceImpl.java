@@ -153,15 +153,15 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public Page<MovieResponse> getAvailableMovies(String genre, LocalDate date, String city, Pageable pageable) {
 
+        if (date == null) {
+            date = LocalDate.now();
+        }
+
         String safeCity = (city == null || city.isBlank()) ? null : city.trim().toLowerCase();
         String safeGenre = (genre == null || genre.isBlank()) ? null : genre.trim().toLowerCase();
 
-        LocalDateTime start = null;
-        LocalDateTime end = null;
-        if (date != null) {
-            start = date.atStartOfDay();
-            end = date.atTime(LocalTime.MAX);
-        }
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(LocalTime.MAX);
 
         return movieRepository.findAvailableMovies(safeGenre, safeCity, start, end, pageable)
                 .map(this::mapToResponse);
