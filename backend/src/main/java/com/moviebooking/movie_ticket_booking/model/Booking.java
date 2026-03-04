@@ -67,6 +67,6 @@ public class Booking {
     private List<BookingSeat> bookingSeats = new ArrayList<>();
 
     @Builder.Default
-    @Column(nullable = false)
+    @Column(name="confirmation_email_sent", nullable = false)
     private boolean confirmationEmailSent = false;
 }

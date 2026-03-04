@@ -129,9 +129,11 @@ public class BookingService {
 
         @Transactional
         public void confirmBooking(Long bookingId) {
+
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
+                // Expiry check
                 if (booking.getExpiresAt().isBefore(LocalDateTime.now())) {
                         if (booking.getStatus() == BookingStatus.PENDING) {
                                 booking.setStatus(BookingStatus.EXPIRED);
@@ -140,11 +142,10 @@ public class BookingService {
                         throw new RuntimeException("Booking has expired");
                 }
 
-                // If already confirmed, just send email if not sent yet
+                // If already confirmed, just try to send email once (atomic flip false->true)
                 if (booking.getStatus() == BookingStatus.CONFIRMED) {
-                        if (!booking.isConfirmationEmailSent()) {
-                                booking.setConfirmationEmailSent(true);
-                                bookingRepository.save(booking);
+                        int updated = bookingRepository.markConfirmationEmailSent(bookingId);
+                        if (updated == 1) {
                                 emailService.sendBookingConfirmation(
                                                 booking.getUser().getEmail(),
                                                 "Booking Confirmed 🎬",
@@ -153,18 +154,23 @@ public class BookingService {
                         return;
                 }
 
+                // Only pending bookings can be confirmed
                 if (booking.getStatus() != BookingStatus.PENDING) {
                         throw new RuntimeException("Booking is not pending. Current status: " + booking.getStatus());
                 }
 
+                // Confirm booking
                 booking.setStatus(BookingStatus.CONFIRMED);
-                booking.setConfirmationEmailSent(true);
                 bookingRepository.save(booking);
 
-                emailService.sendBookingConfirmation(
-                                booking.getUser().getEmail(),
-                                "Booking Confirmed 🎬",
-                                buildBookingEmailContent(booking));
+                // Send email exactly once (atomic flip false->true)
+                int updated = bookingRepository.markConfirmationEmailSent(bookingId);
+                if (updated == 1) {
+                        emailService.sendBookingConfirmation(
+                                        booking.getUser().getEmail(),
+                                        "Booking Confirmed 🎬",
+                                        buildBookingEmailContent(booking));
+                }
         }
 
         @Scheduled(fixedRate = 60000) // runs every 60 seconds
