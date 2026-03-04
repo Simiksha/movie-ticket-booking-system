@@ -133,7 +133,7 @@ public class BookingService {
 
         @Transactional
         public void confirmBooking(Long bookingId) {
-                log.info("CONFIRM_BOOKING called bookingId={}", bookingId);
+                log.warn("CONFIRM_BOOKING called bookingId={}", bookingId);
 
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new RuntimeException("Booking not found"));
@@ -156,7 +156,7 @@ public class BookingService {
 
                 // Try to flip false->true once; only one request will succeed
                 int updated = bookingRepository.markConfirmationEmailSent(bookingId);
-                log.info("markConfirmationEmailSent updatedRows={} bookingId={}", updated, bookingId);
+                log.warn("markConfirmationEmailSent updatedRows={} bookingId={}", updated, bookingId);
 
                 if (updated == 1) {
                         emailService.sendBookingConfirmation(
