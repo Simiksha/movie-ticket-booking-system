@@ -35,6 +35,7 @@ export default function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [cancelling, setCancelling] = useState({});
 
   async function load() {
     const res = await api.get("/bookings/my-bookings");
@@ -69,14 +70,19 @@ export default function MyBookings() {
   }, [bookings]);
 
   async function cancelBooking(bookingId) {
+    if (cancelling[bookingId]) return;
     if (!window.confirm("Cancel this booking?")) return;
 
     try {
       setErr("");
+      setCancelling((p) => ({ ...p, [bookingId]: true }));
+
       await api.delete(`/bookings/${bookingId}`);
       setBookings(await load());
     } catch (e) {
       setErr(e?.response?.data?.message || "Failed to cancel booking");
+    } finally {
+      setCancelling((p) => ({ ...p, [bookingId]: false }));
     }
   }
 
@@ -156,8 +162,16 @@ export default function MyBookings() {
                     )}
 
                     {canCancel && (
-                      <button className="btn btnDanger" onClick={() => cancelBooking(bookingId)}>
-                        Cancel
+                      <button
+                        className="btn btnDanger"
+                        onClick={() => cancelBooking(bookingId)}
+                        disabled={!!cancelling[bookingId]}
+                        style={{
+                          cursor: cancelling[bookingId] ? "not-allowed" : "pointer",
+                          opacity: cancelling[bookingId] ? 0.6 : 1,
+                        }}
+                      >
+                        {cancelling[bookingId] ? "Cancelling..." : "Cancel"}
                       </button>
                     )}
 
