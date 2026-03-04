@@ -36,6 +36,7 @@ export default function MyBookings() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [cancelling, setCancelling] = useState({});
+  const [confirmCancelId, setConfirmCancelId] = useState(null);
 
   async function load() {
     const res = await api.get("/bookings/my-bookings");
@@ -72,17 +73,12 @@ export default function MyBookings() {
   async function cancelBooking(bookingId) {
     if (cancelling[bookingId]) return;
 
-    setCancelling((p) => ({ ...p, [bookingId]: true }));
-
-    const ok = window.confirm("Cancel this booking?");
-    if (!ok) {
-      setCancelling((p) => ({ ...p, [bookingId]: false }));
-      return;
-    }
-
     try {
       setErr("");
+      setCancelling((p) => ({ ...p, [bookingId]: true }));
+
       await api.delete(`/bookings/${bookingId}`);
+      setConfirmCancelId(null);
       setBookings(await load());
     } catch (e) {
       setErr(e?.response?.data?.message || "Failed to cancel booking");
@@ -114,7 +110,9 @@ export default function MyBookings() {
         <div className="card">
           <b>No bookings found.</b>
           <div style={{ marginTop: 20 }}>
-            <Link className="btn btnPrimary" to="/movies">Browse Movies</Link>
+            <Link className="btn btnPrimary" to="/movies">
+              Browse Movies
+            </Link>
           </div>
         </div>
       )}
@@ -128,6 +126,9 @@ export default function MyBookings() {
           const canPay = upper(bookingStatus) === "PENDING";
           const canCancel = upper(bookingStatus) === "CONFIRMED";
 
+          const isCancelling = !!cancelling[bookingId];
+          const isConfirmingThis = confirmCancelId === bookingId;
+
           return (
             <div key={bookingId} className="card">
               <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -138,21 +139,19 @@ export default function MyBookings() {
                     Show: <b style={{ color: "var(--text)" }}>{fmt(b.showTime)}</b>
                   </div>
                   <div style={{ color: "var(--muted)", fontSize: 13 }}>
-                    Seats: <b style={{ color: "var(--text)" }}>
+                    Seats:{" "}
+                    <b style={{ color: "var(--text)" }}>
                       {Array.isArray(b.seats) ? b.seats.join(", ") : "—"}
                     </b>
                   </div>
 
-                  {/* optional amount if backend sends it */}
                   {b.totalAmount != null && (
                     <div style={{ color: "var(--muted)", fontSize: 13 }}>
                       Total: <b style={{ color: "var(--text)" }}>₹{b.totalAmount}</b>
                     </div>
                   )}
 
-                  <div style={{ color: "var(--muted)", fontSize: 12 }}>
-                    Booked at: {fmt(b.bookedAt)}
-                  </div>
+                  <div style={{ color: "var(--muted)", fontSize: 12 }}>Booked at: {fmt(b.bookedAt)}</div>
                 </div>
 
                 <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
@@ -166,21 +165,42 @@ export default function MyBookings() {
                       </Link>
                     )}
 
-                    {canCancel && (
-                      <button
-                        className="btn btnDanger"
-                        onClick={() => cancelBooking(bookingId)}
-                        disabled={!!cancelling[bookingId]}
-                        style={{
-                          cursor: cancelling[bookingId] ? "not-allowed" : "pointer",
-                          opacity: cancelling[bookingId] ? 0.6 : 1,
-                        }}
-                      >
-                        {cancelling[bookingId] ? "Cancelling..." : "Cancel"}
-                      </button>
-                    )}
+                    {canCancel &&
+                      (isConfirmingThis ? (
+                        <>
+                          <button
+                            className="btn btnDanger"
+                            onClick={() => cancelBooking(bookingId)}
+                            disabled={isCancelling}
+                            style={{
+                              cursor: isCancelling ? "not-allowed" : "pointer",
+                              opacity: isCancelling ? 0.6 : 1,
+                            }}
+                          >
+                            {isCancelling ? "Cancelling..." : "Confirm Cancel"}
+                          </button>
 
-                    <span style={{ color: "var(--muted)", fontSize: 12 }}></span>
+                          <button
+                            className="btn"
+                            onClick={() => setConfirmCancelId(null)}
+                            disabled={isCancelling}
+                          >
+                            Keep
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="btn btnDanger"
+                          onClick={() => setConfirmCancelId(bookingId)}
+                          disabled={isCancelling}
+                          style={{
+                            cursor: isCancelling ? "not-allowed" : "pointer",
+                            opacity: isCancelling ? 0.6 : 1,
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      ))}
                   </div>
                 </div>
               </div>
